@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Tracker - Gestione Finanze Personali</title>
+  
+  <!-- Google Fonts: Inter per un look moderno e pulito -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Foglio di stile principale -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Librerie CDN: Chart.js e Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dark-theme"> <!-- Dark theme di default per l'estetica premium -->
+
+  <div class="app-container">
+    
+    <!-- SIDEBAR DI NAVIGAZIONE -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-icon">
+          <i data-lucide="trending-up"></i>
+        </div>
+        <h2>Antigravity<span>Finance</span></h2>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#dashboard" class="menu-item active" data-target="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#transactions" class="menu-item" data-target="transactions">
+          <i data-lucide="arrow-left-right"></i>
+          <span>Transazioni</span>
+        </a>
+        <a href="#accounts" class="menu-item" data-target="accounts">
+          <i data-lucide="wallet"></i>
+          <span>Conti</span>
+        </a>
+        <a href="#budgets" class="menu-item" data-target="budgets">
+          <i data-lucide="pie-chart"></i>
+          <span>Budget & Categorie</span>
+        </a>
+        <a href="#settings" class="menu-item" data-target="settings">
+          <i data-lucide="settings"></i>
+          <span>Impostazioni</span>
+        </a>
+      </nav>
+
+      <!-- Selettore Mese/Anno & Tema -->
+      <div class="sidebar-footer">
+        <div class="date-selector-wrapper">
+          <label for="global-month-year">Mese Corrente</label>
+          <input type="month" id="global-month-year" class="global-date-picker">
+        </div>
+        <button id="theme-toggle" class="btn btn-secondary btn-icon-only" title="Cambia Tema">
+          <i data-lucide="sun" class="sun-icon"></i>
+          <i data-lucide="moon" class="moon-icon"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- AREA DI CONTENUTO PRINCIPALE -->
+    <main class="main-content">
+      
+      <!-- HEADER DI PAGINA -->
+      <header class="main-header">
+        <div class="header-info">
+          <h1 id="page-title">Dashboard</h1>
+          <p id="header-subtitle">Benvenuto nella tua panoramica finanziaria.</p>
+        </div>
+        
+        <div class="header-actions">
+          <div class="balance-badge">
+            <span class="label">Saldo Totale:</span>
+            <span class="value" id="global-total-balance">0,00 €</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENUTI DELLE SEZIONI (SPA VISTE) -->
+      <div class="sections-container">
+
+        <!-- DASHBOARD SECTION -->
+        <section id="section-dashboard" class="content-section active">
+          <!-- Riepilogo Finanziario Cards -->
+          <div class="stats-grid">
+            <div class="stat-card income-card">
+              <div class="card-icon">
+                <i data-lucide="arrow-down-right"></i>
+              </div>
+              <div class="card-data">
+                <span class="card-label">Entrate del Mese</span>
+                <h3 class="card-value text-success" id="dash-income">0,00 €</h3>
+              </div>
+            </div>
+            <div class="stat-card expense-card">
+              <div class="card-icon">
+                <i data-lucide="arrow-up-right"></i>
+              </div>
+              <div class="card-data">
+                <span class="card-label">Uscite del Mese</span>
+                <h3 class="card-value text-danger" id="dash-expense">0,00 €</h3>
+              </div>
+            </div>
+            <div class="stat-card savings-card">
+              <div class="card-icon">
+                <i data-lucide="piggy-bank"></i>
+              </div>
+              <div class="card-data">
+                <span class="card-label">Risparmio del Mese</span>
+                <h3 class="card-value" id="dash-savings">0,00 €</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cassetti di Registrazione Rapida -->
+          <div class="card-panel quick-register-panel">
+            <h3>Registra Movimento</h3>
+            
+            <div class="cassetti-section-title">Categorie Entrate</div>
+            <div class="cassetti-grid" id="cassetti-incomes">
+              <!-- Riempito dinamicamente da JS -->
+            </div>
+
+            <div class="cassetti-section-title">Categorie Uscite</div>
+            <div class="cassetti-grid" id="cassetti-expenses">
+              <!-- Riempito dinamicamente da JS -->
+            </div>
+          </div>
+
+          <!-- Griglia di Grafici/Analisi -->
+          <div class="charts-grid">
+            <div class="chart-box">
+              <div class="chart-header">
+                <h3>Spese per Categoria</h3>
+                <i data-lucide="pie-chart" class="text-muted"></i>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-categories"></canvas>
+                <div id="chart-no-data-categories" class="no-data-placeholder hidden">
+                  <i data-lucide="info"></i>
+                  <p>Nessuna spesa registrata per questo mese.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="chart-header">
+                <h3>Trend Entrate vs Uscite</h3>
+                <i data-lucide="trending-up" class="text-muted"></i>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-trend"></canvas>
+                <div id="chart-no-data-trend" class="no-data-placeholder hidden">
+                  <i data-lucide="info"></i>
+                  <p>Nessun dato disponibile per il trend mensile.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Row Inferiore: Transazioni Recenti e Situazione Budget -->
+          <div class="dash-details-grid">
+            <div class="details-box">
+              <div class="details-header">
+                <h3>Transazioni Recenti</h3>
+                <button class="btn btn-text show-all-tx-link">Vedi tutte</button>
+              </div>
+              <div class="recent-list-container">
+                <div id="recent-transactions-list" class="recent-list">
+                  <!-- Caricato dinamicamente -->
+                </div>
+              </div>
+            </div>
+
+            <div class="details-box">
+              <div class="details-header">
+                <h3>Stato dei Budget</h3>
+                <button class="btn btn-text show-all-budgets-link">Gestisci</button>
+              </div>
+              <div class="budget-progress-list" id="dash-budgets-list">
+                <!-- Caricato dinamicamente -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TRANSACTIONS SECTION -->
+        <section id="section-transactions" class="content-section">
+          <!-- Filtri e Barra di Ricerca -->
+          <div class="filters-bar">
+            <div class="filter-group flex-grow">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="filter-search" placeholder="Cerca descrizione...">
+              </div>
+            </div>
+            
+            <div class="filter-group">
+              <select id="filter-type">
+                <option value="all">Tutti i tipi</option>
+                <option value="income">Solo Entrate</option>
+                <option value="expense">Solo Uscite</option>
+                <option value="transfer">Solo Giroconti</option>
+              </select>
+
+              <select id="filter-account">
+                <option value="all">Tutti i conti</option>
+                <!-- Caricato dinamicamente -->
+              </select>
+
+              <select id="filter-category">
+                <option value="all">Tutte le categorie</option>
+                <!-- Caricato dinamicamente -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Navigatore Mese -->
+          <div class="month-navigator">
+            <button id="tx-month-prev" class="btn btn-secondary btn-icon-only" title="Mese precedente">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <span id="tx-month-label" class="month-navigator-label"></span>
+            <button id="tx-month-next" class="btn btn-secondary btn-icon-only" title="Mese successivo">
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Tabella Transazioni -->
+          <div class="table-container card-panel">
+            <table class="data-table" id="transactions-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descrizione</th>
+                  <th>Categoria</th>
+                  <th>Conto</th>
+                  <th class="text-right">Importo</th>
+                  <th class="text-center" style="width: 100px;">Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-list-tbody">
+                <!-- Caricato dinamicamente -->
+              </tbody>
+            </table>
+            <div id="no-transactions-placeholder" class="empty-state-placeholder hidden">
+              <i data-lucide="search-x"></i>
+              <h3>Nessuna transazione trovata</h3>
+              <p>Prova a modificare i filtri o inserisci una nuova transazione.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ACCOUNTS SECTION -->
+        <section id="section-accounts" class="content-section">
+          <div class="accounts-grid" id="accounts-grid-container">
+            <!-- Caricato dinamicamente -->
+            
+            <!-- Card per aggiunta nuovo conto -->
+            <div class="account-card add-account-card" id="add-account-trigger">
+              <div class="add-icon">
+                <i data-lucide="plus"></i>
+              </div>
+              <h3>Aggiungi Conto</h3>
+              <p>Crea una nuova risorsa finanziaria</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- BUDGETS & CATEGORIES SECTION -->
+        <section id="section-budgets" class="content-section">
+          <div class="category-budget-tabs">
+            <button class="tab-btn active" data-tab="tab-expenses">Uscite e Budget</button>
+            <button class="tab-btn" data-tab="tab-incomes">Entrate</button>
+          </div>
+
+          <div class="tab-content active" id="tab-expenses">
+            <div class="category-header-action">
+              <h3>Categorie di Spesa</h3>
+              <button class="btn btn-secondary btn-sm new-category-btn" data-type="expense">
+                <i data-lucide="plus"></i> Nuova Categoria
+              </button>
+            </div>
+            <div class="categories-list-grid" id="expense-categories-grid">
+              <!-- Caricato dinamicamente -->
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-incomes">
+            <div class="category-header-action">
+              <h3>Categorie di Entrata</h3>
+              <button class="btn btn-secondary btn-sm new-category-btn" data-type="income">
+                <i data-lucide="plus"></i> Nuova Categoria
+              </button>
+            </div>
+            <div class="categories-list-grid" id="income-categories-grid">
+              <!-- Caricato dinamicamente -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS SECTION -->
+        <section id="section-settings" class="content-section">
+          <div class="settings-container">
+            
+            <!-- Pannello Import/Export -->
+            <div class="settings-card card-panel">
+              <div class="settings-card-header">
+                <div class="settings-title">
+                  <i data-lucide="database" class="text-primary"></i>
+                  <h3>Gestione Dati Locali</h3>
+                </div>
+                <p>Salva una copia delle tue finanze sul computer o ripristina un backup precedente (è supportato anche il caricamento del file storico con le emoji).</p>
+              </div>
+              <div class="settings-actions">
+                <button id="export-btn" class="btn btn-secondary">
+                  <i data-lucide="download"></i>
+                  <span>Esporta Backup (JSON)</span>
+                </button>
+                
+                <div class="import-wrapper">
+                  <label for="import-file" class="btn btn-secondary">
+                    <i data-lucide="upload"></i>
+                    <span>Ripristina Backup (JSON)</span>
+                  </label>
+                  <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Pannello Reset e Impostazioni Avanzate -->
+            <div class="settings-card card-panel">
+              <div class="settings-card-header">
+                <div class="settings-title">
+                  <i data-lucide="alert-triangle" class="text-danger"></i>
+                  <h3>Azioni di Pericolo</h3>
+                </div>
+                <p>Queste operazioni non possono essere annullate. Fai attenzione.</p>
+              </div>
+              <div class="settings-actions">
+                <button id="reset-btn" class="btn btn-danger-outline">
+                  <i data-lucide="trash-2"></i>
+                  <span>Ripristina Dati Predefiniti</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ================= MODALI DI INSERIMENTO/MODIFICA ================= -->
+
+  <!-- 1. MODALE TRANSAZIONE (Nuova / Modifica) -->
+  <div class="modal-overlay" id="modal-transaction">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="transaction-modal-title">Nuova Transazione</h3>
+        <button class="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <form id="transaction-form" class="modal-form">
+        <input type="hidden" id="tx-id">
+        
+        <!-- Tipo di Transazione (Entrata / Uscita / Giroconto) -->
+        <div class="form-group">
+          <label>Tipo di Transazione</label>
+          <div class="type-toggle-group">
+            <input type="radio" name="tx-type" id="type-expense" value="expense" checked>
+            <label for="type-expense" class="toggle-btn text-danger">Uscita</label>
+            
+            <input type="radio" name="tx-type" id="type-income" value="income">
+            <label for="type-income" class="toggle-btn text-success">Entrata</label>
+            
+            <input type="radio" name="tx-type" id="type-transfer" value="transfer">
+            <label for="type-transfer" class="toggle-btn text-primary">Giroconto</label>
+          </div>
+        </div>
+
+        <!-- Importo e Data -->
+        <div class="form-row">
+          <div class="form-group flex-grow">
+            <label for="tx-amount">Importo (€) *</label>
+            <input type="number" id="tx-amount" step="0.01" min="0.01" required placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="tx-date">Data *</label>
+            <input type="date" id="tx-date" required>
+          </div>
+        </div>
+
+        <!-- Conto di origine -->
+        <div class="form-group">
+          <label for="tx-account" id="label-tx-account">Conto *</label>
+          <select id="tx-account" required>
+            <!-- Caricato dinamicamente -->
+          </select>
+        </div>
+
+        <!-- Sezione Giroconto (Destinazione) o Categoria (Transazione standard) -->
+        <div class="form-group" id="group-tx-destination" style="display: none;">
+          <label for="tx-to-account">Conto Destinazione *</label>
+          <select id="tx-to-account">
+            <!-- Caricato dinamicamente -->
+          </select>
+        </div>
+
+        <div class="form-group" id="group-tx-category">
+          <label for="tx-category">Categoria *</label>
+          <select id="tx-category">
+            <!-- Caricato dinamicamente -->
+          </select>
+        </div>
+
+        <!-- Descrizione -->
+        <div class="form-group">
+          <label for="tx-description">Descrizione / Nota</label>
+          <input type="text" id="tx-description" placeholder="E.g. Spesa settimanale, Cena...">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-cancel">Annulla</button>
+          <button type="submit" class="btn btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MODALE CONTO (Nuovo / Modifica) -->
+  <div class="modal-overlay" id="modal-account">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="account-modal-title">Aggiungi Conto</h3>
+        <button class="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <form id="account-form" class="modal-form">
+        <input type="hidden" id="acc-id">
+
+        <div class="form-group">
+          <label for="acc-name">Nome Conto *</label>
+          <input type="text" id="acc-name" required placeholder="Es. Conto BancoPosta, Risparmi...">
+        </div>
+
+        <div class="form-group">
+          <label for="acc-balance">Saldo Iniziale (€) *</label>
+          <input type="number" id="acc-balance" step="0.01" required placeholder="0.00">
+          <span class="help-text">Questo saldo iniziale servirà come punto di partenza per il calcolo.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-grow">
+            <label for="acc-color">Colore Conto</label>
+            <input type="color" id="acc-color" value="#3b82f6">
+          </div>
+          <div class="form-group flex-grow">
+            <label for="acc-icon">Icona Conto</label>
+            <select id="acc-icon">
+              <option value="wallet">Portafoglio</option>
+              <option value="cash">Contanti</option>
+              <option value="card">Carta di Credito</option>
+              <option value="piggy-bank">Salvadanaio</option>
+              <option value="bank">Banca</option>
+              <option value="briefcase">Lavoro</option>
+              <option value="home">Casa</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-cancel">Annulla</button>
+          <button type="button" id="acc-delete-btn" class="btn btn-danger hidden">Elimina Conto</button>
+          <button type="submit" class="btn btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MODALE CATEGORIA (Nuova / Modifica) -->
+  <div class="modal-overlay" id="modal-category">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="category-modal-title">Aggiungi Categoria</h3>
+        <button class="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <form id="category-form" class="modal-form">
+        <input type="hidden" id="cat-id">
+        <input type="hidden" id="cat-type">
+
+        <div class="form-group">
+          <label for="cat-name">Nome Categoria *</label>
+          <input type="text" id="cat-name" required placeholder="Es. Bollette, Palestra, Stipendio...">
+        </div>
+
+        <!-- Budget (Solo per Categoria di Spesa) -->
+        <div class="form-group" id="group-cat-budget">
+          <label for="cat-budget">Budget Mensile (€)</label>
+          <input type="number" id="cat-budget" step="1" min="0" placeholder="Nessun budget (opzionale)">
+          <span class="help-text">Imposta una soglia massima mensile per tracciare le spese in questa categoria.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="cat-color">Colore</label>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="color" id="cat-color" value="#a855f7"
+              style="width: 48px; height: 48px; padding: 2px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); cursor: pointer; flex-shrink: 0;">
+            <span id="cat-color-preview"
+              style="flex-grow: 1; height: 48px; border-radius: 10px; background-color: #a855f7; border: 1px solid var(--border-color); transition: background-color 0.2s;"></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Icona / Emoji</label>
+          <input type="hidden" id="cat-icon" value="dot">
+          <div class="emoji-selector-grid" id="emoji-picker-container">
+            <!-- Riempito dinamicamente tramite JS -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-cancel">Annulla</button>
+          <button type="button" id="cat-delete-btn" class="btn btn-danger hidden">Elimina Categoria</button>
+          <button type="submit" class="btn btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. MODALE CALCOLATRICE (Registrazione Movimento) -->
+  <div class="modal-overlay" id="modal-calculator">
+    <div class="modal-card" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 id="calc-modal-title">Registra - Categoria</h3>
+        <button class="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-form" style="padding-top: 16px;">
+        <!-- Display Calcolatrice -->
+        <div class="calculator-display" id="calc-display">0</div>
+
+        <!-- Tastierino Calcolatrice -->
+        <div class="calculator-keypad">
+          <button class="calc-btn" data-val="7">7</button>
+          <button class="calc-btn" data-val="8">8</button>
+          <button class="calc-btn" data-val="9">9</button>
+          <button class="calc-btn operator-btn" data-val="+">+</button>
+
+          <button class="calc-btn" data-val="4">4</button>
+          <button class="calc-btn" data-val="5">5</button>
+          <button class="calc-btn" data-val="6">6</button>
+          <button class="calc-btn operator-btn" data-val="-">-</button>
+
+          <button class="calc-btn" data-val="1">1</button>
+          <button class="calc-btn" data-val="2">2</button>
+          <button class="calc-btn" data-val="3">3</button>
+          <button class="calc-btn operator-btn" data-val="*">×</button>
+
+          <button class="calc-btn" data-val="0">0</button>
+          <button class="calc-btn" data-val=".">.</button>
+          <button class="calc-btn clear-btn" data-val="C">C</button>
+          <button class="calc-btn equals-btn" data-val="=">=</button>
+        </div>
+
+        <form id="calculator-form" class="modal-form" style="padding: 0; gap: 14px;">
+          <!-- Conto -->
+          <div class="form-group">
+            <label for="calc-account">Conto *</label>
+            <select id="calc-account" required>
+              <!-- Caricato dinamicamente -->
+            </select>
+          </div>
+
+          <!-- Conto Destinazione (Solo per Giroconto) -->
+          <div class="form-group" id="group-calc-destination" style="display: none;">
+            <label for="calc-to-account">Conto Destinazione *</label>
+            <select id="calc-to-account">
+              <!-- Caricato dinamicamente -->
+            </select>
+          </div>
+
+          <!-- Data -->
+          <div class="form-group">
+            <label for="calc-date">Data *</label>
+            <input type="date" id="calc-date" required>
+          </div>
+
+          <!-- Note -->
+          <div class="form-group">
+            <label for="calc-notes">Note (opzionale)</label>
+            <input type="text" id="calc-notes" placeholder="Descrizione...">
+          </div>
+
+          <div class="modal-footer" style="margin-top: 10px;">
+            <button type="button" class="btn btn-secondary modal-cancel">Annulla</button>
+            <button type="submit" class="btn btn-primary" id="calc-submit-btn" style="flex-grow: 1;">Registra</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script principale dell'applicazione (caricati in sequenza per compatibilità file://) -->
+  <script src="js/db.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
